@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+  {% block meta_refresh %}
+   <META HTTP-EQUIV="REFRESH" CONTENT="20"> 
+  {% endblock %}
+
+
+    {% block extra_estilos %}
+    <link href="{% static 'autocompletar/content/styles.css' %}" rel="stylesheet" />
+    <style>
+        .controls ul li { list-style:none; }
+    </style>    
+    {% endblock %}
+
+  {% block breadcrumb %}        
+  {% endblock %}        
+
+  {% block content %}
+
+<div class="row-fluid hideInIE8 circleStats">
+	{% for sensor in sensores %}
+     {% for alarma in sensor.alerta_set.all  %}
+        <div class="span4" ontablet="span4" ondesktop="span2">
+
+                    	<div class="{{ alarma.color_actual}}">
+
+						    <div class="header">Histórico: 
+                                <a href="{% if sensor.url_dashboard %}{{sensor.url_dashboard}}{% else %}#{% endif %}">{{sensor.alias}}</a> 
+                                 Probabilidad: {{alarma.prob_critica}}
+                            </div>
+							    <span class="count">
+								    <span class="unit">{{alarma.personas_por_alertar}}</span>
+							    </span>
+
+						    <div class="circleStat">
+
+    						    <div>
+								    <span class="number">
+                                    Alarma {{alarma.tipo_valor_de_alerta}} {{alarma.valor_de_alerta}} {% if alarma.sensoralertado.mute_date %} Mute: {{alarma.sensoralertado.mute_date_hasta|date:"d M Y" }}  {{alarma.sensoralertado.mute_date_hasta|time:"H:i:s" }} {% endif %}
+                                    </span>						
+    							</div>
+                        		<div style="width:120px;display:inline;&quot;">
+                                    <canvas width="120" height="120"></canvas>
+                                        <input type="text" value="{{sensor.valor_actual_round}} C" class="whiteCircle" readonly="readonly" style="width: 140px; position: absolute; margin-top: 60px; margin-left: -120px; font-size: 20px; border: none; font-family: Arial; font-weight: bold; text-align: center; color: rgba(255, 255, 255, 0.901961); padding: 0px; -webkit-appearance: none; background: black;">
+                                </div>
+
+                                {% if alarma.alertado %}
+                        		<div style="width:120px;display:inline;&quot;">
+                                    <canvas width="120" height="120"></canvas>
+                                        <input type="text" value="alertado" class="whiteCircle" readonly="readonly" style="width: 140px; position: absolute; margin-top: 60px; margin-left: -120px; font-size: 20px; border: none; font-family: Arial; font-weight: bold; text-align: center; color: rgba(255, 255, 255, 0.901961); padding: 0px; -webkit-appearance: none; background: red;">
+                                </div>
+                                {% endif %}
+
+
+						    </div><!-- circlestat -->
+						
+
+
+						    <div class="footer">
+							    <span class="count">
+								    <span class="unit"> Medio:
+								    {% if alarma.telegram %}Telegram{% endif %}
+                                    {% if alarma.correo %}Correo{% endif %}
+                                    {% if alarma.sms %}SMS{% endif %}
+                                    </span>
+							    </span>								
+	    					    <span class="number">   
+                                        - Verifica {{alarma.minutes_to_check}} mins
+                                </span>
+						    </div><!-- footer -->
+
+                    	</div>
+				    </div> 
+     {% endfor  %}
+{% endfor%}								
+</div>
+   
+  {% endblock  %}   

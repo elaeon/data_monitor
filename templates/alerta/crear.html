@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+    {% block extra_estilos %}
+    <link href="{% static 'autocompletar/content/styles.css' %}" rel="stylesheet" />
+    <style>
+        .controls ul li { list-style:none; }
+    </style>    
+    {% endblock %}
+
+  {% block breadcrumb %}        
+  {% endblock %}        
+
+  {% block content %}
+
+
+
+<div class="box span12">
+    <div class="box-header" data-original-title="">
+        <h2>
+            <i class="halflings-icon plus white"></i>
+                <span class="break"></span>
+                <li><a href="{%url 'monitor_actual'%}"><i class="icon-edit"></i><span class="hidden-tablet"> Ver temperaturas actuales</span></a></li>	
+        </h2>
+    </div>
+    <div class="box-content">
+       
+    </div>
+</div>
+
+
+    
+  {% endblock  %}   
