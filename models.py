@@ -23,7 +23,7 @@ class Sensor(models.Model):
 
     def valor_actual(self):
         try:
-            return self.datos(30)[-1]
+            return self.datos(60)[-1]
         except IndexError:
             return None
 
@@ -41,6 +41,28 @@ class Sensor(models.Model):
         datos = datos[0]['datapoints']
         return filter(lambda x: x[0] is not None, datos)
 
+    def datos_date(self, from_, until):
+        URL_PARAMS = "render?target={name}&format=json".format(name=self.nombre)
+        url = self.url_sensor + URL_PARAMS + "&from={}&until={}".format(from_, until)
+        datos = requests.get(url).json()
+        datos = datos[0]['datapoints']
+        return filter(lambda x: x[0] is not None, datos)
+
+    def sensor_graph(self, seconds):
+        import pandas as pd
+        data = self.datos(seconds)
+        dates = [datetime.datetime.fromtimestamp(t).strftime('%Y-%m-%d %H:%M:%S') for v, t in data]
+        values = [v for v, t in data]
+        data = {
+            'date': dates, 
+            'values': values
+        }
+        df = pd.DataFrame(data, columns = ['date', 'values'])
+        ax = df.plot()
+        fig = ax.get_figure()
+        print(type(fig))
+        fig.savefig("ttt.png")
+
 
 @python_2_unicode_compatible        
 class Persona(models.Model):
@@ -54,7 +76,7 @@ class Persona(models.Model):
 
         
 class Alerta(models.Model):
-    prob_critica = models.FloatField("Probalilidad", default=0)
+    prob_critica = models.FloatField("Porcentaje", default=0)
     seconds_to_check = models.IntegerField(blank=True, null=True)
     sensor = models.ForeignKey(Sensor, blank=True, null=True)
     valor_de_alerta = models.FloatField()
@@ -237,6 +259,37 @@ class Alerta(models.Model):
             out_range = filter(lambda x: x < limit_value, values)
         #print("####### P:", len(out_range) / total_length)
         return (len(out_range) / total_length) > p
+
+    def valor_calc(self):
+        datos  = self.sensor.datos(self.seconds_to_check)
+        datos = [temp for temp, _ in datos]
+        out_r, in_r = self.valor_prob(
+                datos, self.valor_de_alerta, self.tipo_valor_de_alerta, self.prob_critica)
+        if self.alertado():
+            return out_r
+        else:
+            return in_r
+
+    @classmethod
+    def valor_prob(self, values, limit_value, type_limit_value, p):
+        if type_limit_value == "maximo":
+            out_range = filter(lambda x: x > limit_value, values)
+            in_range = filter(lambda x: x < limit_value, values)
+        else:
+            out_range = filter(lambda x: x < limit_value, values)
+            in_range = filter(lambda x: x > limit_value, values)
+
+        try:
+            out_r = sum(out_range) / len(out_range)
+        except ZeroDivisionError:
+            out_r = None
+
+        try:
+            in_r = sum(in_range) / len(in_range)
+        except ZeroDivisionError:
+            in_r = None
+
+        return (out_r, in_r)
 
     def activate(self, temp_avg):
         ahora = datetime.datetime.now()

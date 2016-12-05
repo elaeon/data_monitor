@@ -27,7 +27,7 @@
 
 						    <div class="header">Histórico: 
                                 <a href="{% if sensor.url_dashboard %}{{sensor.url_dashboard}}{% else %}#{% endif %}">{{sensor.alias}}</a> 
-                                 Probabilidad: {{alarma.prob_critica}}
+                                 Porcentaje: {{alarma.prob_critica}}
                             </div>
 							    <span class="count">
 								    <span class="unit">{{alarma.personas_por_alertar}}</span>
@@ -42,7 +42,7 @@
     							</div>
                         		<div style="width:120px;display:inline;&quot;">
                                     <canvas width="120" height="120"></canvas>
-                                        <input type="text" value="{{sensor.valor_actual_round}} C" class="whiteCircle" readonly="readonly" style="width: 140px; position: absolute; margin-top: 60px; margin-left: -120px; font-size: 20px; border: none; font-family: Arial; font-weight: bold; text-align: center; color: rgba(255, 255, 255, 0.901961); padding: 0px; -webkit-appearance: none; background: black;">
+                                        <input type="text" value="{{alarma.valor_calc}} C" class="whiteCircle" readonly="readonly" style="width: 140px; position: absolute; margin-top: 60px; margin-left: -120px; font-size: 20px; border: none; font-family: Arial; font-weight: bold; text-align: center; color: rgba(255, 255, 255, 0.901961); padding: 0px; -webkit-appearance: none; background: black;">
                                 </div>
 
                                 {% if alarma.alertado %}
