@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from datetime import date, datetime,time
 import urllib, urllib2, json
-
+import os
 import datetime
 
 
@@ -43,7 +43,7 @@ class Sensor(models.Model):
 
     def datos_date(self, from_, until):
         URL_PARAMS = "render?target={name}&format=json".format(name=self.nombre)
-        url = self.url_sensor + URL_PARAMS + "&from={}&until={}".format(from_, until)
+        url = os.path.join(self.url_sensor, URL_PARAMS + "&from={}&until={}".format(from_, until))
         datos = requests.get(url).json()
         datos = datos[0]['datapoints']
         return filter(lambda x: x[0] is not None, datos)
