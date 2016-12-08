@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+
+{% block extra_estilos %}
+<link href="{% static 'autocompletar/content/styles.css' %}" rel="stylesheet" />
+<style>
+    .controls ul li { list-style:none; }
+</style>    
+{% endblock %}
+
+{% block breadcrumb %}{% endblock %}        
+
+{% block content %}
+<div class="row-fluid hideInIE8 circleStats">
+    <h3>{{ sensored_detail.nombre }}</h3>
+    <table>
+    <tr><td>{{ sensores_detail.total_time }}</td></tr>
+    <tr><td>Temperatura promedio {{ sensores_detail.avg }} &plusmn;{{ sensores_detail.std }}</td></tr>
+    </table>
+    <div>Datos de la puerta</div>
+    <table>
+    <tr><td>Tiempo de apertura promedio: {{ sensores_detail.d_avg }}</td></tr>
+    <tr><td>Tiempo mínimo de apertura: {{ sensores_detail.d_min }}</td></tr>    
+    <tr><td>Tiempo máximo de apertura: {{ sensores_detail.d_max }}</td></tr>    
+    <tr><td>Aperturas promedio diaria: {{ sensores_detail.n_elems.1 }}</td></tr>
+    </table>
+    <div>Detalles de aperturas</div>
+    <table>
+    <tr>
+        <td>Fecha</td>
+        <td>Intervalo entre aperturas</td>
+        <td>Frecuencia de apertura</td>
+        <td>Aperturas en el intervalo</td>
+        <td>Duracion promedio de apertura</td>
+        <td>Temperatura promedio</td>
+    </tr>
+    {% for interval_avg, open_avg, open_total, open_total_avg, value_avg, date in sensores_detail.consecutivos %}
+    <tr>
+        <td>{{ date }}</td>
+        <td>{{ interval_avg }}</td>
+        <td>{{ open_avg }}</td>
+        <td>{{ open_total }}</td>
+        <td>{{ open_total_avg }}</td>
+        <td>{{ value_avg }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+    <img src="data:image/png;base64,{{ sensor_c_img }}">
+    <img src="data:image/png;base64,{{ sensor_d_img }}">
+</div>
+{% endblock  %}   

@@ -12,6 +12,7 @@ from datetime import date, datetime,time
 import urllib, urllib2, json
 import os
 import datetime
+import io
 
 
 class Sensor(models.Model):
@@ -20,6 +21,8 @@ class Sensor(models.Model):
     alias = models.CharField(blank=False, max_length=50)
     estado = models.BooleanField(default= True)
     url_dashboard = models.URLField(blank=True, null=True)
+    group_name = models.CharField(blank=True, null=True, max_length=50)
+    type = models.CharField(choices=(("c", "continuos"), ("d", "discrete")), max_length=2)
 
     def valor_actual(self):
         try:
@@ -36,7 +39,7 @@ class Sensor(models.Model):
         
     def datos(self, seconds):
         URL_PARAMS = "render?target={name}&format=json".format(name=self.nombre)
-        url = self.url_sensor + URL_PARAMS + "&from=-{}s".format(seconds)
+        url = os.path.join(self.url_sensor, URL_PARAMS + "&from=-{}s".format(seconds))
         datos = requests.get(url).json()
         datos = datos[0]['datapoints']
         return filter(lambda x: x[0] is not None, datos)
@@ -49,19 +52,16 @@ class Sensor(models.Model):
         return filter(lambda x: x[0] is not None, datos)
 
     def sensor_graph(self, seconds):
-        import pandas as pd
-        data = self.datos(seconds)
-        dates = [datetime.datetime.fromtimestamp(t).strftime('%Y-%m-%d %H:%M:%S') for v, t in data]
-        values = [v for v, t in data]
-        data = {
-            'date': dates, 
-            'values': values
-        }
-        df = pd.DataFrame(data, columns = ['date', 'values'])
-        ax = df.plot()
-        fig = ax.get_figure()
-        print(type(fig))
-        fig.savefig("ttt.png")
+        import base64
+        URL_PARAMS = "render?target={name}&format=png".format(name=self.nombre)
+        url = os.path.join(self.url_sensor, URL_PARAMS + "&from=-{}s".format(seconds))
+        buf = io.BytesIO()
+        request = requests.get(url, stream=True)
+        if request.status_code == 200:
+            for chunk in request.iter_content(1024):
+                buf.write(chunk)
+        buf.seek(0)
+        return base64.b64encode(buf.read())
 
 
 @python_2_unicode_compatible        
@@ -196,7 +196,7 @@ class Alerta(models.Model):
 
         for persona in self.persona.all():
 
-            print cadena_des.encode("utf8")
+            #print cadena_des.encode("utf8")
 
             parametros = urllib.urlencode({
                 u'apikey': settings.LLAVE_API, 
@@ -208,7 +208,7 @@ class Alerta(models.Model):
                 'http://www.smsmasivos.com.mx/sms/api.envio.new.php', parametros, headers)
             opener = urllib2.build_opener()
             respuesta = opener.open(request).read()
-            print(json.loads(respuesta))
+            #print(json.loads(respuesta))
 
     def enviar_sms_desactivada(self):
         cadena_des = self.tpl_inactivo_msg()        
@@ -224,7 +224,7 @@ class Alerta(models.Model):
                 'http://www.smsmasivos.com.mx/sms/api.envio.new.php', parametros, headers)
             opener = urllib2.build_opener()
             respuesta = opener.open(request).read()
-            print(json.loads(respuesta))
+            #print(json.loads(respuesta))
     
     def envio_mensaje_apagado_alarma(self):
         if self.telegram:
@@ -280,12 +280,12 @@ class Alerta(models.Model):
             in_range = filter(lambda x: x > limit_value, values)
 
         try:
-            out_r = sum(out_range) / len(out_range)
+            out_r = round(sum(out_range) / len(out_range), 1)
         except ZeroDivisionError:
             out_r = None
 
         try:
-            in_r = sum(in_range) / len(in_range)
+            in_r = round(sum(in_range) / len(in_range), 1)
         except ZeroDivisionError:
             in_r = None
 

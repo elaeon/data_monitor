@@ -28,6 +28,7 @@
 						    <div class="header">Histórico: 
                                 <a href="{% if sensor.url_dashboard %}{{sensor.url_dashboard}}{% else %}#{% endif %}">{{sensor.alias}}</a> 
                                  Porcentaje: {{alarma.prob_critica}}
+                            <a href="{% url 'sensor_groups_details' sensor.group_name %}">Detalle</a>
                             </div>
 							    <span class="count">
 								    <span class="unit">{{alarma.personas_por_alertar}}</span>

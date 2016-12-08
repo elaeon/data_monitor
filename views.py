@@ -29,4 +29,21 @@ def silenciar_alerta(request, sensor_alertado_id):
 
 @login_required(login_url=settings.RUTA_LOGIN)    
 def monitor_actual (request):
-    return render (request, 'alerta/monitor.html', {'sensores':Sensor.objects.filter(estado=True) })
+    return render (request, 'alerta/monitor.html', {'sensores': Sensor.objects.filter(estado=True) })
+
+
+@login_required(login_url=settings.RUTA_LOGIN)
+def sensor_groups_details(request, group_name):
+    from monitoreo.utils import monitor_details
+
+    one_week = 604800
+    sensor_c = Sensor.objects.get(estado=True, group_name=group_name, type='c')
+    sensor_d = Sensor.objects.get(estado=True, group_name=group_name, type='d')
+    sensores_detail = monitor_details(sensor_c, sensor_d, one_week)
+    sensor_c_img = sensor_c.sensor_graph(one_week)
+    sensor_d_img = sensor_d.sensor_graph(one_week)
+    return render (request, 'alerta/monitor_details.html', {
+        'sensores_detail': sensores_detail, 
+        'sensor_c_img': sensor_c_img,
+        'sensor_d_img': sensor_d_img
+        })
