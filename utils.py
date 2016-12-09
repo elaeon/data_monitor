@@ -72,8 +72,6 @@ class State(object):
                 key = elem.t0.day - i
                 groups.setdefault(key, [])
                 groups[key].append(elem)
-            else:
-                print(elem.t0)
         return groups
 
 
