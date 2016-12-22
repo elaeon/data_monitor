@@ -144,3 +144,77 @@ def monitor_details(sensor_c, sensor_d, period):
     render.update(count_value_change(data2, data_temp))
     return render
 
+def resume(values):
+    if len(values) > 0:
+        ti = values[0][1] 
+        tf = values[-1][1]
+        ti = datetime.utcfromtimestamp(ti)
+        tf = datetime.utcfromtimestamp(tf)
+        seconds = (tf - ti).seconds
+        return abs(values[0][0] - values[-1][0]), seconds
+    return 0, 0
+  
+
+def radio(dec, inc):
+    v, t = dec
+    dec_unit = t / float(v)
+    v, t = inc
+    inc_unit = t / float(v)
+    return dec_unit / inc_unit
+
+
+def calc_decrement_inc(data):
+    l_increment = []
+    l_decrement = []
+    resume_i = []
+    resume_d = []
+    i = False
+    d = False
+    for (v0, t0), (v1, t1) in zip(data, data[1:]):
+        #print(v0, v1)
+        if v0 > v1:
+            #print("D", v1, v0)
+            if len(l_increment) > 0:
+                resume_i.append(resume(l_increment))
+                l_increment = []
+            l_decrement.append((v0, t0))
+            l_decrement.append((v1, t1))
+            i = False
+            d = True
+        elif v1 > v0:
+            #print("I", v1, v0)
+            if len(l_decrement) > 0:
+                resume_d.append(resume(l_decrement))
+                l_decrement = []
+            l_increment.append((v0, t0))
+            l_increment.append((v1, t1))
+            i = True
+            d = False
+        else:
+            if d:
+                l_decrement.append((v0, t0))
+                l_decrement.append((v1, t1))
+            elif i:
+                l_increment.append((v0, t0))
+                l_increment.append((v1, t1))
+    if len(l_decrement) > 0:
+        resume_d.append(resume(l_decrement))
+    if len(l_increment) > 0:
+        resume_i.append(resume(l_increment))
+
+    #print(resume_d)
+    import heapq
+    decrement = np.asarray(heapq.nlargest(3, resume_d, key=lambda x:x[0])).mean(axis=0)
+    increment = np.asarray(heapq.nlargest(3, resume_i, key=lambda x:x[0])).mean(axis=0)
+    print(max(resume_d, key=lambda x:x[0]), max(resume_i, key=lambda x:x[0]))
+    return decrement, increment
+
+def test():
+    import requests
+    url = "http://carbon.inmegen.gob.mx/render/?target=sensors.limon161.temperature_low_one&format=json&from=09:25_20161201&until=19:50_20161220"
+    r = requests.get(url)
+    data = r.json()[0]
+    data = filter(lambda x: x[0] is not None, data['datapoints'])
+    d, i = calc_decrement_inc(data)
+    print(d, i)
+    print(radio(d, i))
