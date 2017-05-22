@@ -63,6 +63,10 @@ class Sensor(models.Model):
         buf.seek(0)
         return base64.b64encode(buf.read())
 
+    def sensor_graph_url(self, seconds):
+        URL_PARAMS = "render?target={name}&format=png".format(name=self.nombre)
+        url = os.path.join(self.url_sensor, URL_PARAMS + "&from=-{}s".format(seconds))
+        return url
 
 @python_2_unicode_compatible        
 class Persona(models.Model):
